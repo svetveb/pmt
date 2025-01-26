@@ -32,7 +32,7 @@ const App = () => {
       case 'contact':
         return <Contact />;
       default:
-        return <About />;
+        return <Contact />;
     }
   };
 
