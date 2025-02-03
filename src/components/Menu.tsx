@@ -34,6 +34,7 @@ const Menu: React.FC<MenuProps> = ({ setPage }) => {
                         Контакты
                     </Link>
                 </li>
+
             </ul>
         </nav>
     );
