@@ -1,9 +1,11 @@
 import React from 'react';
+import Menu from './Menu';
 
 const Header: React.FC = () => {
     return (
-        <header className="bg-gray-500 text-white p-6">
-            <h1 className="text-3xl font-bold">Приложение</h1>
+        <header className="container w-full flex p-6 ">
+
+            <Menu />
         </header>
     );
 };
