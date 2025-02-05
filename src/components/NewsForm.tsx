@@ -4,9 +4,10 @@ import { mockNews } from '../data/mockNews';
 
 interface NewsFormProps {
     mode: 'create' | 'edit';
+    onAddNews?: (newsItem: { title: string; content: string }) => void; // Убираем id  
 }
 
-const NewsForm: React.FC<NewsFormProps> = ({ mode }) => {
+const NewsForm: React.FC<NewsFormProps> = ({ mode, onAddNews }) => {
     const navigate = useNavigate();
     const { id } = useParams<{ id?: string }>();
     const isEditMode = mode === 'edit';
@@ -16,7 +17,7 @@ const NewsForm: React.FC<NewsFormProps> = ({ mode }) => {
 
     useEffect(() => {
         if (isEditMode && id) {
-            const newsItem = mockNews.find(item => item.id === parseInt(id));
+            const newsItem = mockNews.find((item: { id: number; }) => item.id === parseInt(id));
             if (newsItem) {
                 setTitle(newsItem.title);
                 setContent(newsItem.content);
@@ -26,7 +27,12 @@ const NewsForm: React.FC<NewsFormProps> = ({ mode }) => {
 
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        // Здесь будет логика сохранения новости
+        const newItem = { title, content };
+
+        if (onAddNews) {
+            onAddNews(newItem); // Передаем только title и content
+        }
+
         navigate('/');
     };
 
@@ -59,4 +65,4 @@ const NewsForm: React.FC<NewsFormProps> = ({ mode }) => {
     );
 };
 
-export default NewsForm;
+export default NewsForm; 

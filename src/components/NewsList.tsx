@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { mockNews } from '../data/mockNews';
 import NewsCard from './NewsCard';
-import { Link } from 'react-router-dom';
+import NewsForm from './NewsForm';
 
 interface News {
     id: number;
@@ -10,17 +10,20 @@ interface News {
     created_at: string;
 }
 
-const mockNewsData = [
-    {
-        id: 1,
-        title: "Первая новость",
-        content: "Содержание первой новости",
-        created_at: "2025-01-15"
-    },
-];
-
 const NewsList: React.FC = () => {
-    const [news, setNews] = useState<News[]>(mockNewsData);
+    const [news, setNews] = useState<News[]>(mockNews);
+    const [isFormVisible, setFormVisible] = useState(false); // Состояние для управления видимостью формы
+
+    const addNews = (newItem: { title: string; content: string }) => {
+        const newNewsItem: News = {
+            id: Date.now(), // Генерация уникального ID 
+            title: newItem.title,
+            content: newItem.content,
+            created_at: new Date().toISOString() // Установка текущей даты 
+        };
+        setNews((prevNews) => [...prevNews, newNewsItem]);
+        setFormVisible(false); // Скрываем форму после добавления новости
+    };
 
     return (
         <section className="flex flex-col items-center w-full py-20">
@@ -34,13 +37,19 @@ const NewsList: React.FC = () => {
                     ))}
                 </div>
                 <div className="text-center mt-8">
-                    <Link to="/create" className="px-8 py-4 text-lg font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 transition duration-300">
+                    <button
+                        onClick={() => setFormVisible(true)} // Показываем форму при нажатии на кнопку
+                        className="px-8 py-4 text-lg font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 transition duration-300"
+                    >
                         Добавить новость
-                    </Link>
+                    </button>
                 </div>
+
+                {/* Форма для добавления новой новости */}
+                {isFormVisible && <NewsForm mode="create" onAddNews={addNews} />}
             </div>
         </section>
     );
 };
 
-export default NewsList;
+export default NewsList; 

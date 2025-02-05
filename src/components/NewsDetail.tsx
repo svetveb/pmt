@@ -19,7 +19,7 @@ const NewsDetail = () => {
     return (
         <div className="mb-4">
             <h1 className="text-3xl font-bold">{newsItem.title}</h1>
-            <p className="text-gray-600">{newsItem.date}</p>
+            <p className="text-gray-600">{newsItem.created_at}</p>
             <p className="mt-4">{newsItem.content}</p>
             <Link to="/" className="text-blue-500 hover:underline">Назад</Link>
         </div>
