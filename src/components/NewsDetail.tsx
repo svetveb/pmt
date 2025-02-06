@@ -1,6 +1,6 @@
-import React from 'react';
+import axios, { AxiosResponse } from 'axios';
+import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { mockNews } from '../../public/mockNews';
 
 interface NewsItem {
     id: number;
@@ -13,9 +13,36 @@ interface NewsItem {
 
 const NewsDetail: React.FC = () => {
     const { id } = useParams<{ id: string }>();
+    const [newsItem, setNewsItem] = useState<NewsItem | undefined>(undefined);
+    const [loading, setLoading] = useState<boolean>(true);
+    const [error, setError] = useState<string | null>(null);
 
-    // Найдем новость по ID
-    const newsItem: NewsItem | undefined = id ? mockNews.find((item: { id: number; }) => item.id === parseInt(id)) : undefined;
+    useEffect(() => {
+        const fetchNews = async () => {
+            try {
+                const response: AxiosResponse<NewsItem[]> = await axios.get('./mockNews.json');
+                const newsData = response.data;
+
+                const foundItem = newsData.find(item => item.id === parseInt(id!));
+                setNewsItem(foundItem);
+            } catch (err) {
+                setError('Ошибка при загрузке новости');
+                console.error(err);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchNews();
+    }, [id]);
+
+    if (loading) {
+        return <div>Загрузка...</div>;
+    }
+
+    if (error) {
+        return <div>{error}</div>;
+    }
 
     if (!newsItem) {
         return (

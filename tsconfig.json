@@ -20,6 +20,6 @@
     },
     "include": [
         "src",
-        "public/mockNews.ts"
+        "public/mockNews.json"
     ]
 }
