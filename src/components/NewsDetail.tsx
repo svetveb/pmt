@@ -1,11 +1,21 @@
 import React from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { mockNews } from '../data/mockNews';
+import { mockNews } from '../../public/mockNews';
 
-const NewsDetail = () => {
+interface NewsItem {
+    id: number;
+    title: string;
+    content: string;
+    created_at: string;
+    status: string;
+    role: string;
+}
+
+const NewsDetail: React.FC = () => {
     const { id } = useParams<{ id: string }>();
-    const newsItem = id ? mockNews.find((item) => item.id === parseInt(id)) : undefined;
 
+    // Найдем новость по ID
+    const newsItem: NewsItem | undefined = id ? mockNews.find((item: { id: number; }) => item.id === parseInt(id)) : undefined;
 
     if (!newsItem) {
         return (

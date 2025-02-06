@@ -1,0 +1,26 @@
+@layer base {
+    :root {
+        --background-color: #ffffff;
+        --foreground-color: #1f2937;
+        --primary-color: #3b82f6;
+        --primary-foreground-color: #ffffff;
+        --border-color: #e5e7eb;
+        --font-sans: system-ui, -apple-system, sans-serif;
+    }
+
+    [data-theme="dark"] {
+        --background-color: #1f2937;
+        --foreground-color: #ffffff;
+        --primary-color: #60a5fa;
+        --primary-foreground-color: #ffffff;
+        --border-color: #374151;
+    }
+}
+
+@layer components {
+    .container {
+        max-width: 1280px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+}
