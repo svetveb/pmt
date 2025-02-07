@@ -46,7 +46,7 @@ const NewsDetail: React.FC = () => {
 
     if (!newsItem) {
         return (
-            <div className="mb-4">
+            <div className="max-w-2xl mb-8 lg:w-1/2">
                 <h1 className="text-3xl font-bold">Новость не найдена</h1>
                 <Link to="/" className="text-blue-500 hover:underline">Назад</Link>
             </div>

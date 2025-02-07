@@ -1,6 +1,7 @@
+// NewsForm.tsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-
+import axios, { AxiosResponse } from 'axios';
 
 interface NewsItem {
     id: number;
@@ -18,7 +19,6 @@ const NewsForm: React.FC<NewsFormProps> = ({ mode, onAddNews, onEditNews }) => {
     const navigate = useNavigate();
     const { id } = useParams<{ id?: string }>();
     const isEditMode = mode === 'edit';
-
     const [title, setTitle] = useState('');
     const [content, setContent] = useState('');
     const [loading, setLoading] = useState(true);
@@ -26,65 +26,62 @@ const NewsForm: React.FC<NewsFormProps> = ({ mode, onAddNews, onEditNews }) => {
 
     useEffect(() => {
         const fetchNews = async () => {
-            try {
-                const response = await fetch('/mockNews.json'); // Путь к файлу в папке public 
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
+            if (isEditMode && id) {
+                try {
+                    const response: AxiosResponse<NewsItem[]> = await axios.get('./mockNews.json');
+                    const newsData = response.data;
+                    const foundItem = newsData.find(item => item.id === parseInt(id));
+                    if (foundItem) {
+                        setTitle(foundItem.title);
+                        setContent(foundItem.content);
+                    } else {
+                        setError('Новость не найдена');
+                    }
+                } catch (err) {
+                    setError('Ошибка при загрузке новости');
+                    console.error(err);
                 }
-                const data: NewsItem[] = await response.json();
-                const newsItem = data.find((item) => item.id === parseInt(id!));
-                if (newsItem) {
-                    setTitle(newsItem.title);
-                    setContent(newsItem.content);
-                } else {
-                    setError('Новость не найдена');
-                }
-            } catch (error) {
-                setError('Ошибка загрузки новостей');
-            } finally {
-                setLoading(false);
             }
-        };
-
-        if (isEditMode && id) {
-            fetchNews();
-        } else {
             setLoading(false);
-        }
+        };
+        fetchNews();
     }, [isEditMode, id]);
 
-    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-
         if (!title || !content) {
             setError('Заполните все поля');
             return;
         }
 
-        const newItem = { title, content };
+        try {
+            const newItem = { title, content };
 
-        if (isEditMode && id && onEditNews) {
-            onEditNews(parseInt(id), newItem); // Передаем id для редактирования 
-        } else if (onAddNews) {
-            onAddNews(newItem); // Передаем только title и content для создания 
+            if (isEditMode && id && onEditNews) {
+                await axios.patch(`./mockNews.json/${id}`, newItem);
+                onEditNews(parseInt(id), newItem);
+            } else if (onAddNews) {
+                await axios.post('./mockNews.json', newItem);
+                onAddNews(newItem);
+            }
+
+            navigate('/');
+        } catch (err) {
+            setError('Ошибка при сохранении новости');
+            console.error(err);
         }
-
-        navigate('/');
     };
 
-    if (loading) {
-        return <div>Загрузка...</div>;
-    }
-
-    if (error) {
-        return <div className="text-red-500">{error}</div>;
-    }
+    if (loading) return <div>Загрузка...</div>;
+    if (error) return <div className="text-red-500">{error}</div>;
 
     return (
         <form onSubmit={handleSubmit} className="mb-4">
-            <h1 className="text-2xl font-bold mb-4">{isEditMode ? 'Редактировать новость' : 'Создать новость'}</h1>
+            <h1 className="text-2xl font-bold mb-4">
+                {isEditMode ? 'Редактировать новость' : 'Создать новость'}
+            </h1>
             <div className="mb-4">
-                <label className="block">Заголовок</label>
+                <label className="block mb-2">Заголовок</label>
                 <input
                     type="text"
                     value={title}
@@ -94,7 +91,7 @@ const NewsForm: React.FC<NewsFormProps> = ({ mode, onAddNews, onEditNews }) => {
                 />
             </div>
             <div className="mb-4">
-                <label className="block">Содержание</label>
+                <label className="block mb-2">Содержание</label>
                 <textarea
                     value={content}
                     onChange={(e) => setContent(e.target.value)}
@@ -102,7 +99,10 @@ const NewsForm: React.FC<NewsFormProps> = ({ mode, onAddNews, onEditNews }) => {
                     className="border p-2 w-full rounded"
                 />
             </div>
-            <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700 transition duration-300">
+            <button
+                type="submit"
+                className="bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700 transition duration-300"
+            >
                 {isEditMode ? 'Сохранить' : 'Создать'}
             </button>
         </form>

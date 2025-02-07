@@ -1,6 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
+import axios, { AxiosResponse } from 'axios';
 import NewsCard from './NewsCard';
 import NewsForm from './NewsForm';
+import { NewsContext } from '../context/NewsContext';
 
 interface News {
     id: number;
@@ -9,38 +11,68 @@ interface News {
     created_at: string;
 }
 
-const NewsList: React.FC = () => {
-    const [news, setNews] = useState<News[]>([]);
-    const [isFormVisible, setFormVisible] = useState(false);
+interface NewsUpdates {
+    title: string;
+    content: string;
+}
 
-    // Функция для загрузки новостей
+const NewsList: React.FC = () => {
+    const { state, dispatch } = useContext(NewsContext);
+    const [isFormVisible, setIsFormVisible] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [loading, setLoading] = useState(true);
+
     const fetchNews = async () => {
         try {
-            const response = await fetch('/mockNews.json'); // Путь к файлу в папке public
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            const data = await response.json();
-            setNews(data);
-        } catch (error) {
-            console.error('Ошибка при загрузке новостей:', error);
+            const response: AxiosResponse<News[]> = await axios.get('./mockNews.json');
+            dispatch({ type: 'SET_NEWS', payload: response.data }); // Используйте dispatch для обновления состояния
+            localStorage.setItem('news', JSON.stringify(response.data)); // Сохранение новостей в localStorage 
+        } catch (err) {
+            setError('Ошибка при загрузке новостей');
+            console.error(err);
+        } finally {
+            setLoading(false);
         }
     };
 
     useEffect(() => {
-        fetchNews(); // Загружаем новости при монтировании компонента
-    }, []);
+        const storedNews = localStorage.getItem('news');
+        if (storedNews) {
+            dispatch({ type: 'SET_NEWS', payload: JSON.parse(storedNews) }); // Используйте dispatch для обновления состояния
+            setLoading(false);
+        } else {
+            fetchNews();
+        }
+    }, [dispatch]); // Добавьте dispatch в зависимости
 
-    const addNews = (newItem: { title: string; content: string }) => {
-        const newNewsItem: News = {
+    const updateLocalStorage = () => {
+        localStorage.setItem('news', JSON.stringify(state.news));
+    };
+
+    const addNews = (newItem: NewsUpdates) => {
+        const newNewsItem = {
             id: Date.now(),
             title: newItem.title,
             content: newItem.content,
             created_at: new Date().toISOString(),
         };
-        setNews((prevNews) => [...prevNews, newNewsItem]);
-        setFormVisible(false);
+        dispatch({ type: 'ADD_NEWS', payload: newNewsItem });
+        updateLocalStorage();
+        setIsFormVisible(false);
     };
+
+    const handleDeleteNews = (id: number) => {
+        dispatch({ type: 'DELETE_NEWS', payload: id });
+        updateLocalStorage();
+    };
+
+    const handleEditNews = (id: number, updates: NewsUpdates) => {
+        dispatch({ type: 'EDIT_NEWS', payload: { id, updates } });
+        updateLocalStorage();
+    };
+
+    if (loading) return <div>Загрузка...</div>;
+    if (error) return <div>{error}</div>;
 
     return (
         <section className="flex flex-col items-center w-full py-20">
@@ -49,13 +81,18 @@ const NewsList: React.FC = () => {
                     Новости
                 </h1>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
-                    {news.map((item) => (
-                        <NewsCard key={item.id} news={item} />
+                    {state.news.map((item) => (
+                        <NewsCard
+                            key={item.id}
+                            news={item}
+                            onDelete={() => handleDeleteNews(item.id)}
+                            onEdit={(updates: NewsUpdates) => handleEditNews(item.id, updates)}
+                        />
                     ))}
                 </div>
                 <div className="text-center mt-8">
                     <button
-                        onClick={() => setFormVisible(true)}
+                        onClick={() => setIsFormVisible(true)}
                         className="px-8 py-4 text-lg font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 transition duration-300"
                     >
                         Добавить новость
@@ -67,4 +104,4 @@ const NewsList: React.FC = () => {
     );
 };
 
-export default NewsList;
+export default NewsList; 
